@@ -1,0 +1,66 @@
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #121212;
+    color: #ffffff;
+    font-family: 'Arial', sans-serif;
+}
+
+.header {
+    background: #1f1f1f;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.header h1 {
+    font-size: 2.5em;
+    margin: 0;
+}
+
+.vehicle-card {
+    background: #2c2c2c; /* Default vehicle color */
+    border-radius: 8px;
+    transition: background 0.3s ease;
+    margin: 15px;
+    padding: 15px;
+    cursor: pointer;
+}
+
+.vehicle-card:hover {
+    background: #3d3d3d;
+}
+
+.vehicle-car {
+    background: #1e88e5; /* Car color */
+}
+
+.vehicle-truck {
+    background: #fbc02d; /* Truck color */
+}
+
+.vehicle-bus {
+    background: #d32f2f; /* Bus color */
+}
+
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 2em;
+    }
+
+    .vehicle-card {
+        margin: 10px;
+        padding: 10px;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s;
+}
