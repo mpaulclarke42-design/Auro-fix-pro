@@ -3,42 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Professional repair guides for Gas, Electric, Diesel & Hybrid vehicles">
+    <meta name="theme-color" content="#ff6b35">
     <title>Auto Fix PRO</title>
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <h1>Welcome to Auto Fix PRO</h1>
-        <nav>
-            <ul>
-                <li><a href="#gas">Gas Vehicles</a></li>
-                <li><a href="#ev">Electric Vehicles</a></li>
-                <li><a href="#diesel">Diesel Vehicles</a></li>
-                <li><a href="#hybrid">Hybrid Vehicles</a></li>
-            </ul>
-        </nav>
+    <header class="header">
+        <div class="logo">🔧 Auto Fix PRO</div>
     </header>
-    <main>
-        <section id="gas">
-            <h2>Gas Vehicles</h2>
-            <p>Repair guides, tips, and more for gas-powered vehicles.</p>
-        </section>
-        <section id="ev">
-            <h2>Electric Vehicles</h2>
-            <p>Comprehensive guides for electric vehicle maintenance.</p>
-        </section>
-        <section id="diesel">
-            <h2>Diesel Vehicles</h2>
-            <p>Expert guidance for diesel vehicle repairs.</p>
-        </section>
-        <section id="hybrid">
-            <h2>Hybrid Vehicles</h2>
-            <p>Specialized repair guides for hybrid vehicles.</p>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2026 Auto Fix PRO. All rights reserved.</p>
-    </footer>
-    <script src="service-worker.js"></script>
+
+    <section class="hero">
+        <h1>Master Any Vehicle</h1>
+        <p>Professional repair guides for Gas, Electric, Diesel & Hybrid</p>
+        
+        <div class="vehicle-toggle" role="group" aria-label="Filter by vehicle type">
+            <button class="vehicle-btn active" onclick="filter('all')">All</button>
+            <button class="vehicle-btn" onclick="filter('gas')">⛽ Gas</button>
+            <button class="vehicle-btn" onclick="filter('ev')">⚡ EV</button>
+            <button class="vehicle-btn" onclick="filter('diesel')">🛢️ Diesel</button>
+            <button class="vehicle-btn" onclick="filter('hybrid')">🔋 Hybrid</button>
+        </div>
+    </section>
+
+    <div class="container" id="guideList" role="list" aria-label="Repair guides"></div>
+
+    <!-- Paywall -->
+    <div class="paywall" id="paywall" role="dialog" aria-modal="true" aria-labelledby="paywallTitle">
+        <div class="paywall-content">
+            <h2 id="paywallTitle">🔒 Upgrade to PRO</h2>
+            <p>Get unlimited access to all repair guides</p>
+            <div class="price">$9.99<span style="font-size: 1rem;">/month</span></div>
+            <ul style="text-align: left; margin: 1.5rem 0; color: var(--gray);">
+                <li>✓ Unlimited repair guides</li>
+                <li>✓ Labor time estimates</li>
+                <li>✓ Cost savings calculator</li>
+                <li>✓ Offline access</li>
+            </ul>
+            <button class="btn" onclick="subscribe()">Upgrade Now</button>
+            <button class="btn btn-outline" onclick="closePaywall()">Maybe Later</button>
+        </div>
+    </div>
+
+    <!-- Guide Detail -->
+    <div class="guide-detail" id="guideDetail" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+        <div class="detail-header">
+            <button class="detail-close" onclick="closeGuide()" aria-label="Close guide">×</button>
+            <h2 id="detailTitle">Guide Title</h2>
+            <p id="detailSubtitle">Difficulty • Time</p>
+        </div>
+        <div class="detail-body" id="detailBody"></div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
