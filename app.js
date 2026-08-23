@@ -1,6 +1,67 @@
+// ─── Stripe Payment Link ────────────────────────────────────────────────────
+// Replace the empty string below with your Stripe Payment Link URL.
+// Example: 'https://buy.stripe.com/yourlink'
+// The link should be configured in your Stripe Dashboard under
+// Products → Payment Links. Set a success URL of:
+//   https://your-domain.com/?payment=success
+// and a cancel URL of:
+//   https://your-domain.com/?payment=cancelled
+const STRIPE_PAYMENT_LINK = '';
+// ────────────────────────────────────────────────────────────────────────────
+
 // State management
-let views = 0;
+let views = parseInt(localStorage.getItem('auro_views') || '0', 10);
 const maxFreeViews = 2; // Set to 2 for testing, change to 5 for production
+
+// Subscription helpers
+function isSubscribed() {
+    return localStorage.getItem('auro_pro') === 'true';
+}
+
+function activateSubscription() {
+    localStorage.setItem('auro_pro', 'true');
+    localStorage.setItem('auro_views', '0');
+    views = 0;
+    showProBadge();
+}
+
+function showProBadge() {
+    const badge = document.getElementById('proBadge');
+    if (badge) {
+        badge.style.display = 'inline-block';
+    }
+}
+
+// Handle Stripe return URL parameters
+function handlePaymentReturn() {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+
+    if (payment === 'success') {
+        activateSubscription();
+        closePaywall();
+        // Clean the URL so refreshing doesn't re-trigger
+        window.history.replaceState({}, document.title, window.location.pathname);
+        showSuccessMessage();
+    } else if (payment === 'cancelled') {
+        // Clean the URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+}
+
+function showSuccessMessage() {
+    const msg = document.createElement('div');
+    msg.id = 'successToast';
+    msg.style.cssText = [
+        'position:fixed', 'top:1rem', 'left:50%', 'transform:translateX(-50%)',
+        'background:var(--success,#4caf50)', 'color:#fff', 'padding:1rem 2rem',
+        'border-radius:8px', 'font-weight:bold', 'z-index:9999',
+        'box-shadow:0 4px 12px rgba(0,0,0,0.3)'
+    ].join(';');
+    msg.textContent = '🎉 Welcome to Pro! Unlimited access unlocked.';
+    document.body.appendChild(msg);
+    setTimeout(() => msg.remove(), 5000);
+}
 
 // All repair guides data
 const guides = [
@@ -178,10 +239,13 @@ function filter(type) {
 
 // Open guide detail view
 function openGuide(guide) {
-    views++;
-    if(views > maxFreeViews) {
-        document.getElementById('paywall').classList.add('active');
-        return;
+    if (!isSubscribed()) {
+        views++;
+        localStorage.setItem('auro_views', String(views));
+        if (views > maxFreeViews) {
+            document.getElementById('paywall').classList.add('active');
+            return;
+        }
     }
     
     document.getElementById('detailTitle').textContent = guide.title;
@@ -226,20 +290,37 @@ function closeGuide() {
 // Close paywall
 function closePaywall() {
     document.getElementById('paywall').classList.remove('active');
-    views = maxFreeViews; // Reset so they can continue browsing
 }
 
-// Subscribe handler (integrate with Stripe)
+// Subscribe handler — redirects to Stripe Payment Link
 function subscribe() {
-    // TODO: Replace with your Stripe payment link
-    // Example: window.location.href = 'https://checkout.stripe.com/pay/YOUR_PAYMENT_LINK_HERE';
-    alert('In production, this connects to Stripe Checkout\n\nFor now, clicking OK simulates subscription');
-    closePaywall();
-    views = 0; // Reset counter for pro users
+    if (!STRIPE_PAYMENT_LINK) {
+        // Developer fallback: no link configured yet
+        console.warn('STRIPE_PAYMENT_LINK is not set in app.js');
+        alert('Payment link not configured.\n\nSet STRIPE_PAYMENT_LINK in app.js to enable Stripe Checkout.');
+        return;
+    }
+
+    // Build the full return URLs so Stripe can redirect back
+    const base = window.location.href.split('?')[0];
+    const successUrl = encodeURIComponent(base + '?payment=success');
+    const cancelUrl  = encodeURIComponent(base + '?payment=cancelled');
+
+    // Stripe Payment Links accept ?success_url= and ?cancel_url= query params
+    const destination = `${STRIPE_PAYMENT_LINK}?success_url=${successUrl}&cancel_url=${cancelUrl}`;
+    window.location.href = destination;
 }
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+    // Restore Pro badge if already subscribed
+    if (isSubscribed()) {
+        showProBadge();
+    }
+
+    // Handle Stripe redirect returns (?payment=success / ?payment=cancelled)
+    handlePaymentReturn();
+
     renderGuides();
 
     // Register service worker
