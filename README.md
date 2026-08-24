@@ -68,13 +68,14 @@ This is a static site — deploy to any host:
 
 | Tier | Price | Access |
 |------|-------|--------|
-| Free | $0 | First 2 guide views |
+| Free | $0 | Browse guide list only (no guide content) |
 | Pro  | $9.99/mo | Unlimited guides, offline, savings calculator |
 
-To increase free tier limit, change `MAX_FREE_VIEWS` in `app.js`:
+To allow some free views before the paywall, set `MAX_FREE_VIEWS` in `app.js`:
 
 ```js
-const MAX_FREE_VIEWS = 5; // production default
+const MAX_FREE_VIEWS = 0; // 0 = no free views (default)
+// const MAX_FREE_VIEWS = 5; // allow 5 free views before paywall
 ```
 
 ---

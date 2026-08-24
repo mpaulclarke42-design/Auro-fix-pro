@@ -1,7 +1,7 @@
 'use strict';
 
 let views = 0;
-const MAX_FREE_VIEWS = 2; // Set to 2 for testing, change to 5 for production
+const MAX_FREE_VIEWS = 0; // 0 = paywall on first guide view (no free views)
 
 const guides = [
     // GAS
