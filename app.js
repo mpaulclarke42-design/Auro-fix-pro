@@ -1,20 +1,13 @@
-// State management
-let views = 0;
-const maxFreeViews = 2; // Set to 2 for testing, change to 5 for production
+'use strict';
 
-// All repair guides data
+let views = 0;
+const MAX_FREE_VIEWS = 0; // 0 = paywall on first guide view (no free views)
+
 const guides = [
-    // GAS VEHICLES
+    // GAS
     {
-        id: 'gas-oil',
-        type: 'gas',
-        icon: '🛢️',
-        title: 'Oil Change',
-        difficulty: 'easy',
-        time: '30-45 min',
-        parts: '$30-60',
-        labor: '$80-120',
-        save: '$70-130',
+        id: 'gas-oil', type: 'gas', icon: '🛢️', title: 'Oil Change',
+        difficulty: 'easy', time: '30-45 min', parts: '$30-60', labor: '$80-120', save: '$70-130',
         steps: [
             'Warm engine 2-3 minutes for better oil flow',
             'Remove drain plug and let oil drain 10-15 minutes',
@@ -25,15 +18,8 @@ const guides = [
         warning: 'Hot oil can cause burns. Wear gloves and eye protection.'
     },
     {
-        id: 'gas-brakes',
-        type: 'gas',
-        icon: '🛑',
-        title: 'Brake Pad Replacement',
-        difficulty: 'medium',
-        time: '1-2 hours',
-        parts: '$40-100',
-        labor: '$150-250',
-        save: '$160-310',
+        id: 'gas-brakes', type: 'gas', icon: '🛑', title: 'Brake Pad Replacement',
+        difficulty: 'medium', time: '1-2 hours', parts: '$40-100', labor: '$150-250', save: '$160-310',
         steps: [
             'Remove wheel and inspect rotor condition',
             'Remove caliper and hang with bungee cord',
@@ -43,17 +29,10 @@ const guides = [
         ],
         warning: 'Brake dust may contain asbestos. Do not blow with compressed air.'
     },
-    // ELECTRIC VEHICLES
+    // EV
     {
-        id: 'ev-12v',
-        type: 'ev',
-        icon: '🔋',
-        title: '12V Battery Replacement',
-        difficulty: 'easy',
-        time: '15-20 min',
-        parts: '$150-300',
-        labor: '$60-100',
-        save: '$60-160',
+        id: 'ev-12v', type: 'ev', icon: '🔋', title: '12V Battery Replacement',
+        difficulty: 'easy', time: '15-20 min', parts: '$150-300', labor: '$60-100', save: '$60-160',
         steps: [
             'Power down vehicle completely and wait 5 minutes',
             'Locate 12V battery (NOT the high voltage pack)',
@@ -64,15 +43,8 @@ const guides = [
         warning: '⚠️ NEVER touch orange cables. High voltage (400V+) is lethal. This guide covers only the 12V auxiliary battery.'
     },
     {
-        id: 'ev-charging',
-        type: 'ev',
-        icon: '🔌',
-        title: 'Charging Port Cleaning',
-        difficulty: 'easy',
-        time: '10 min',
-        parts: '$0-20',
-        labor: '$40-60',
-        save: '$40-80',
+        id: 'ev-charging', type: 'ev', icon: '🔌', title: 'Charging Port Cleaning',
+        difficulty: 'easy', time: '10 min', parts: '$0-20', labor: '$40-60', save: '$40-80',
         steps: [
             'Inspect port for debris, corrosion, or damage',
             'Use contact cleaner and soft brush on pins',
@@ -81,17 +53,10 @@ const guides = [
         ],
         warning: 'Never use metal tools in the charging port.'
     },
-    // DIESEL VEHICLES
+    // DIESEL
     {
-        id: 'diesel-oil',
-        type: 'diesel',
-        icon: '🛢️',
-        title: 'Diesel Oil Change',
-        difficulty: 'easy',
-        time: '45-60 min',
-        parts: '$60-120',
-        labor: '$100-150',
-        save: '$100-210',
+        id: 'diesel-oil', type: 'diesel', icon: '🛢️', title: 'Diesel Oil Change',
+        difficulty: 'easy', time: '45-60 min', parts: '$60-120', labor: '$100-150', save: '$100-210',
         steps: [
             'Use CJ-4 or CK-4 rated diesel oil only (10+ quarts)',
             'Drain while warm - diesel oil is black normally',
@@ -102,15 +67,8 @@ const guides = [
         warning: 'Overfilling diesel engine causes catastrophic damage.'
     },
     {
-        id: 'diesel-dpf',
-        type: 'diesel',
-        icon: '🌪️',
-        title: 'DPF Regeneration',
-        difficulty: 'medium',
-        time: '20-40 min',
-        parts: '$0',
-        labor: '$100-200',
-        save: '$100-200',
+        id: 'diesel-dpf', type: 'diesel', icon: '🌪️', title: 'DPF Regeneration',
+        difficulty: 'medium', time: '20-40 min', parts: '$0', labor: '$100-200', save: '$100-200',
         steps: [
             'Check DPF warning light - solid means regen needed',
             'Drive at highway speed 40+ MPH for 20+ minutes',
@@ -120,17 +78,10 @@ const guides = [
         ],
         warning: 'Frequent short trips clog DPF. Highway driving prevents issues.'
     },
-    // HYBRID VEHICLES
+    // HYBRID
     {
-        id: 'hybrid-12v',
-        type: 'hybrid',
-        icon: '🔋',
-        title: 'Hybrid 12V Battery',
-        difficulty: 'easy',
-        time: '20 min',
-        parts: '$200-400',
-        labor: '$80-120',
-        save: '$80-200',
+        id: 'hybrid-12v', type: 'hybrid', icon: '🔋', title: 'Hybrid 12V Battery',
+        difficulty: 'easy', time: '20 min', parts: '$200-400', labor: '$80-120', save: '$80-200',
         steps: [
             'Power down and open door to discharge capacitors',
             'Wait 5 minutes before touching battery',
@@ -142,110 +93,151 @@ const guides = [
     }
 ];
 
-// Render guides based on filter
-function renderGuides(filter = 'all') {
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+}
+
+function renderGuides(filterType) {
+    filterType = filterType || 'all';
     const container = document.getElementById('guideList');
     container.innerHTML = '';
-    
-    const filtered = filter === 'all' ? guides : guides.filter(g => g.type === filter);
-    
-    filtered.forEach(guide => {
+
+    const filtered = filterType === 'all' ? guides : guides.filter(function(g) { return g.type === filterType; });
+
+    filtered.forEach(function(guide) {
         const card = document.createElement('div');
         card.className = 'guide-card';
-        card.onclick = () => openGuide(guide);
-        card.innerHTML = `
-            <div class="guide-title">${guide.icon} ${guide.title}</div>
-            <div class="guide-meta">
-                <span class="difficulty ${guide.difficulty}">● ${guide.difficulty}</span>
-                <span>⏱️ ${guide.time}</span>
-                <span style="color: var(--success);">💰 Save ${guide.save}</span>
-            </div>
-        `;
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', 'Open guide: ' + guide.title);
+        card.addEventListener('click', function() { openGuide(guide); });
+        card.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { openGuide(guide); } });
+
+        const saveSpan = document.createElement('span');
+        saveSpan.style.color = 'var(--success)';
+        saveSpan.textContent = '💰 Save ' + guide.save;
+
+        card.innerHTML =
+            '<div class="guide-title">' + escapeHtml(guide.icon) + ' ' + escapeHtml(guide.title) + '</div>' +
+            '<div class="guide-meta">' +
+                '<span class="difficulty ' + escapeHtml(guide.difficulty) + '">● ' + escapeHtml(guide.difficulty) + '</span>' +
+                '<span>⏱️ ' + escapeHtml(guide.time) + '</span>' +
+            '</div>';
+
+        const saveMeta = document.createElement('span');
+        saveMeta.style.color = 'var(--success)';
+        saveMeta.textContent = '💰 Save ' + guide.save;
+        card.querySelector('.guide-meta').appendChild(saveMeta);
+
         container.appendChild(card);
     });
 }
 
-// Filter guides by type
 function filter(type) {
-    document.querySelectorAll('.vehicle-btn').forEach(btn => {
+    document.querySelectorAll('.vehicle-btn').forEach(function(btn) {
         btn.classList.remove('active');
-        if(btn.textContent.toLowerCase().includes(type) || (type === 'all' && btn.textContent === 'All')) {
+        const btnText = btn.textContent.toLowerCase();
+        if ((type === 'all' && btn.textContent.trim() === 'All') ||
+            (type !== 'all' && btnText.includes(type))) {
             btn.classList.add('active');
         }
     });
     renderGuides(type);
 }
 
-// Open guide detail view
 function openGuide(guide) {
     views++;
-    if(views > maxFreeViews) {
+    if (views > MAX_FREE_VIEWS) {
         document.getElementById('paywall').classList.add('active');
         return;
     }
-    
+
     document.getElementById('detailTitle').textContent = guide.title;
-    document.getElementById('detailSubtitle').textContent = `${guide.difficulty.toUpperCase()} • ${guide.time}`;
-    
-    let html = `
-        <div class="savings-box">
-            <strong>💰 DIY Savings: ${guide.save}</strong><br>
-            <span style="color: var(--gray);">Parts: ${guide.parts} | Shop Labor: ${guide.labor}</span>
-        </div>
-    `;
-    
-    if(guide.warning) {
-        html += `<div class="warning">⚠️ ${guide.warning}</div>`;
+    document.getElementById('detailSubtitle').textContent = guide.difficulty.toUpperCase() + ' • ' + guide.time;
+
+    const body = document.getElementById('detailBody');
+    body.innerHTML = '';
+
+    // Savings box
+    const savingsBox = document.createElement('div');
+    savingsBox.className = 'savings-box';
+    savingsBox.innerHTML = '<strong>💰 DIY Savings: ' + escapeHtml(guide.save) + '</strong><br>';
+    const savingsDetail = document.createElement('span');
+    savingsDetail.style.color = 'var(--gray)';
+    savingsDetail.textContent = 'Parts: ' + guide.parts + ' | Shop Labor: ' + guide.labor;
+    savingsBox.appendChild(savingsDetail);
+    body.appendChild(savingsBox);
+
+    // Warning
+    if (guide.warning) {
+        const warning = document.createElement('div');
+        warning.className = 'warning';
+        warning.textContent = '⚠️ ' + guide.warning;
+        body.appendChild(warning);
     }
-    
-    html += '<h3 style="margin: 1.5rem 0 1rem;">Step-by-Step Instructions</h3>';
-    
-    guide.steps.forEach((step, i) => {
-        html += `
-            <div class="step">
-                <strong>Step ${i+1}:</strong> ${step}
-            </div>
-        `;
+
+    // Steps heading
+    const heading = document.createElement('h3');
+    heading.style.cssText = 'margin: 1.5rem 0 1rem;';
+    heading.textContent = 'Step-by-Step Instructions';
+    body.appendChild(heading);
+
+    // Steps
+    guide.steps.forEach(function(step, i) {
+        const stepEl = document.createElement('div');
+        stepEl.className = 'step';
+        const strong = document.createElement('strong');
+        strong.textContent = 'Step ' + (i + 1) + ': ';
+        stepEl.appendChild(strong);
+        stepEl.appendChild(document.createTextNode(step));
+        body.appendChild(stepEl);
     });
-    
-    html += `
-        <div style="text-align: center; margin-top: 2rem;">
-            <button class="btn" onclick="closeGuide()">Complete ✓</button>
-        </div>
-    `;
-    
-    document.getElementById('detailBody').innerHTML = html;
+
+    // Complete button
+    const btnContainer = document.createElement('div');
+    btnContainer.className = 'complete-btn-container';
+    const completeBtn = document.createElement('button');
+    completeBtn.className = 'btn';
+    completeBtn.textContent = 'Complete ✓';
+    completeBtn.addEventListener('click', closeGuide);
+    btnContainer.appendChild(completeBtn);
+    body.appendChild(btnContainer);
+
     document.getElementById('guideDetail').classList.add('active');
 }
 
-// Close guide detail view
 function closeGuide() {
     document.getElementById('guideDetail').classList.remove('active');
 }
 
-// Close paywall
 function closePaywall() {
     document.getElementById('paywall').classList.remove('active');
-    views = maxFreeViews; // Reset so they can continue browsing
+    views = MAX_FREE_VIEWS;
 }
 
-// Subscribe handler (integrate with Stripe)
 function subscribe() {
-    // TODO: Replace with your Stripe payment link
-    // Example: window.location.href = 'https://checkout.stripe.com/pay/YOUR_PAYMENT_LINK_HERE';
-    alert('In production, this connects to Stripe Checkout\n\nFor now, clicking OK simulates subscription');
-    closePaywall();
-    views = 0; // Reset counter for pro users
+    // Replace STRIPE_PAYMENT_LINK with your actual Stripe Checkout URL
+    // e.g. https://buy.stripe.com/your_link
+    const stripeLink = '';
+    if (stripeLink) {
+        window.location.href = stripeLink;
+    } else {
+        alert('Payment integration coming soon!\n\nIn production, this connects to Stripe Checkout.');
+        closePaywall();
+        views = 0;
+    }
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', function() {
     renderGuides();
 
     // Register service worker
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(err => {
-            console.log('Service Worker registration failed:', err);
+        navigator.serviceWorker.register('sw.js').catch(function(err) {
+            console.warn('Service worker registration failed:', err);
         });
     }
 });
